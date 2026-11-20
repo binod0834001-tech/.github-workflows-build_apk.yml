@@ -1,0 +1,29 @@
+name: Build Mera Hisab APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Create Fresh Flutter Project
+        run: |
+          flutter create --org com.hisabpro --project-name merahisab temp_app
+          cp -r temp_app/android .
+          rm -rf temp_app
+      - name: Add AdMob ID to Manifest
+        run: |
+          sed -i 's/android:label="merahisab"/android:label="Mera Hisab"/g' android/app/src/main/AndroidManifest.xml
+          sed -i 's/<\/application>/<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6692289875226065~6064895526"\/><\/application>/g' android/app/src/main/AndroidManifest.xml
+      - name: Build APK
+        run: |
+          flutter pub get
+          flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mera-Hisab-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
